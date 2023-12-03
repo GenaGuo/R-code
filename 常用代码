@@ -1,0 +1,87 @@
+#按照某列名称合并两个表格
+rm(list = ls())
+setwd("D:/Zsoftware/R和RStudio")
+library(readxl)
+MW<- read_excel("D:/Zsoftware/R和RStudio/MW_All_gene_TPM/MW_All_gene_TPM.xlsx")
+BMK<- read_excel("D:/Zsoftware/R和RStudio/BMK_All_gene_TPM/BMK_All_gene_TPM.xlsx")
+library(dplyr)
+merge<-left_join(MW,BMK,by="Gene")
+write.csv(merge,file = "merge.csv",sep = "\t")
+savehistory("D:/Zsoftware/R和RStudio/merge.Rhistory")
+
+#基因表达量count转TPM
+getwd()
+setwd("D:/Zsoftware/R和RStudio")
+rm(list = ls())
+library(readxl)
+mydata<-read_excel("D:/Paper3/BMK_All_gene.xlsx")
+library(dplyr)
+mydata<-na.omit(mydata)
+write.csv(mydata,file = "mydata.csv",sep = "\t")
+mycounts<-read.csv("mydata.csv")
+head(mycounts)
+rownames(mycounts)<-mycounts[,1]
+rownames(mycounts)
+mycounts<-mycounts[,-1]
+mycounts
+head(mycounts)
+kb <- mycounts$Length / 1000
+kb
+countdata <- mycounts[,6:23]
+countdata
+rpk <- countdata / kb
+rpk
+tpm <- t(t(rpk)/colSums(rpk) * 1000000)
+head(tpm)
+write.table(tpm,file="tpm.xls",sep="\t",quote=F)
+colSums(tpm)
+savehistory("D:/Zsoftware/R和RStudio/Count_TPM.Rhistory")
+
+#清屏
+control+L
+
+#Mac复制文件路径
+Command+Option+C
+
+#相关性分析https://zhuanlan.zhihu.com/p/586234818
+library(corrplot)
+getwd()
+LG <-read.table("/Users/huanhuan/Desktop/LG.txt", header=T, sep="\t") #sep设置分隔符为Tab键
+LG
+class(LG)
+cor (LG, method="pearson")
+LGc <-cor (LG, method="pearson")
+corrplot(LGc)
+corrplot(LGc, method = "circle", tl.col = "black", tl.cex = 1, tl.srt = 45)
+addcol <- colorRampPalette(c("royalblue", "lightgrey", "red3"))
+corrplot(LGc, method = "circle", col = addcol(100), addgrid.col = "black", tl.col = "black", tl.cex = 1, tl.srt = 45)
+
+#双因素方差分析https://mp.weixin.qq.com/s/2CQDZ4R5FY2EwzZtWFMnag
+rm(list = ls())
+lipid <- read.table("/Users/huanhuan/Desktop/Lipid.txt", sep = '\t', header = TRUE, stringsAsFactors = FALSE, check.names = FALSE)
+group  <- read.table("/Users/huanhuan/Desktop/Group.txt", sep = '\t', header = TRUE, stringsAsFactors = FALSE, check.names = FALSE)
+lipid <- merge(lipid, group, by = 'Sample')
+PA1 <- lipid[ ,c('Sample', 'Treat', 'Time', 'PA1')]
+PA1$Treat <- factor(PA1$Treat)
+PA1$Time <- factor(PA1$Time)
+library(car)
+par(mfrow = c(1, 2))
+qqPlot(lm(PA1~Treat, data = PA1), simulate = TRUE, main = 'Plot', labels = FALSE,col="#F39B7FB2")
+ qqPlot(lm(PA1~Time, data = PA1), simulate = TRUE, main = 'Plot', labels = FALSE,col="#F39B7FB2")
+bartlett.test(PA1~Treat, data = PA1)#检验方差齐性
+bartlett.test(PA1~Time, data = PA1)#检验方差齐性
+fit <- aov(PA1~Treat*Time, data = PA1)#方差齐性用该函数
+summary(fit)
+scheirerRayHare(PA2~Treat + Time, data = PA2)#方差不齐用该函数
+aggregate(PA1$PA1, by = list(PA1$Treat, PA1$Time), FUN = mean)
+aggregate(PA1$PA1, by = list(PA1$Treat, PA1$Time), FUN = sd)
+boxplot(PA1~Treat*Time, data = PA1, col = c("#3C5488B2","#00A087B2", "#F39B7FB2"))
+
+
+
+
+
+
+
+
+
